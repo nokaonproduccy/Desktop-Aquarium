@@ -54,7 +54,7 @@ Then paste this whole block. It creates a `host` mailbox and a `friend` mailbox 
 )
 ```
 
-If Terminal stays open without returning to the prompt, leave that window running. If you already set up a mailbox named `claire`, keep using `claire` wherever the examples below say `host`.
+If Terminal stays open without returning to the prompt, leave that window running. If you already set up a mailbox named `name`, keep using `name` wherever the examples below say `host`.
 
 ### 2. Get an HTTPS address
 
