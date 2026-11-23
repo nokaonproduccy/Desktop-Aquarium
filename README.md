@@ -1,69 +1,94 @@
 # Koi Aquarium
 
-A little translucent desktop aquarium for macOS. It runs as a borderless app at desktop level so fish can swim continuously. App windows cover the tank where they overlap it.
+A little translucent aquarium for your Mac desktop. Feed the fish, decorate the tank, and turn your friends into fish that deliver tiny messages. The aquarium sits behind your app windows.
 
-## Run it on your Mac
+## Install on your Mac
 
-1. Unzip the download.
-2. If you haven't installed Apple's Command Line Tools, run `xcode-select --install` in Terminal and wait for the installer to finish.
-3. In Terminal, type `bash ` with a trailing space, drag `build.command` into the Terminal window, and press Return. This builds and opens **Koi Aquarium.app**. Afterward, you can open the app directly from Finder.
+1. Download the repository as a ZIP and unzip it.
+2. If you need Apple’s Command Line Tools, run `xcode-select --install` in Terminal and finish the installer.
+3. In Terminal, type `bash ` with a trailing space. Drag `build.command` from the unzipped folder into Terminal and press Return.
+4. The script builds and opens **Koi Aquarium.app**. After that, you can open it directly from Finder.
 
-## Use the tank
+If the build reports a Swift SDK mismatch, check **System Settings → General → Software Update** for a Command Line Tools update, then rerun `build.command`.
 
-- Click the water to drop food immediately. Quick repeated clicks add more pellets.
-- Drag to move the aquarium. Quicker changes in direction make the water slosh more and briefly startle the fish.
-- Double-click the glass above the waterline to edit, or right-click and choose **Edit Aquarium**. Drag the bottom-right grip to change width and height independently.
-- In edit mode, drag algae, coral, kelp, stones, a shell, or driftwood from the tray into the water. It snaps to the floor where you drop it. Drag placed decor to move it horizontally. Right-click in edit mode to remove all decorations.
-- Click Done or double-click above the waterline again to return to feeding.
-- Right-click to set the count of koi, guppies, and pearl minnows independently (0–8 each) or switch the water color.
-- Use the fish icon in the Mac menu bar to show, hide, or quit the aquarium.
-- Counts, water color, tank position, dimensions, and decorations are saved automatically.
- 
-Sea Glass is mint and muted teal, Jade Lagoon is sage and deep green, and Moonwater is pale lilac and slate blue.
+## Make the tank yours
 
-## If Swift reports an SDK mismatch
+- **Add fish.** A fresh tank starts empty. Double-click and choose **Add Fish**. Pick **Add a common fish** to add a koi, guppy, or pearl minnow without setting up messaging. Once you’ve added your first fish, double-click the glass above the waterline to edit.
+- **Manage fish.** Right-click → **Manage Fish** to open a side panel with fish icons and names. Click **Select**, pick any fish, then click **Delete Selected**. Removing a linked fish asks for confirmation.
+- **Feed and move the tank.** Click the water to drop food. Each click adds pellets. Drag the tank to move it and watch the water slosh. In edit mode, drag the bottom-right grip to resize it.
+- **Decorate.** Drag items from the edit tray into the water. Regular decor snaps to the floor. Snails and starfish can sit higher up and slowly creep from where you place them. Shrimp wander near the floor and hop when clicked. A shrimp click doesn’t drop food.
+- **Rearrange or remove items.** Drag the treasure chest along the floor in edit mode. To remove a decoration or creature, drag it out of the water and release it.
+- **Change the look.** Right-click to switch water colors, choose a sand or gravel style under **Tank floor**, or toggle **Automatic moonlight**. The fish occasionally blow tiny bubbles.
 
-The build script checks the selected toolchain and Xcode installations in Applications for a compiler and macOS SDK that can load AppKit together. It does this without changing your Mac’s selected developer tools. If none work, check System Settings → General → Software Update for a Command Line Tools update, or install a matching Xcode release. Then run the same build command again.
+Your fish, friends, tank position, size, and decor are saved when you quit. Use the fish icon in the Mac menu bar to show, hide, or quit the aquarium.
 
-## Send notes between two Macs
+## Preview a message on your own Mac
 
-- Double-click above the waterline and choose **Send Message**. Notes can be up to 72 characters.
-- On your friend's Mac, your fish appears below the glass speech bubble and bobs until they click the bubble. Queued notes appear one at a time. Both apps must be running to send and receive live. Notes wait on the relay while the recipient is offline.
+Right-click the tank → **Preview a Message…**, type a sample note, and click **Preview**. A fish appears with a glass speech bubble sized to the message. Click the bubble to dismiss it. The preview stays on your Mac and works without a relay.
 
-### Preview on one Mac
+## Set up friend messaging
 
-Right-click the tank, choose **Preview a Message…**, and type a sample note. Click **Preview** to see the bubble and your chosen fish bobbing below it. Click the bubble to dismiss it. This local preview works without pairing or a relay and sends nothing.
+One person hosts the relay and everyone uses the same HTTPS address. These steps show how to host it on your Mac with Tailscale Funnel. Your Mac needs to stay awake and online while the relay is in use. Your friends don’t need to install Tailscale.
 
-### Pair the two copies
+### 1. Start the relay
 
-The ZIP includes an unhosted two-person relay. You need one Python 3.10+ host with SQLite 3.38+ and a public HTTPS domain both Macs can reach. The relay only listens on loopback. One way to expose it is to point a domain at that host and use Caddy with this Caddyfile:
+You’ll need Python 3.10 or newer with SQLite 3.38 or newer. Open Terminal and go to the unzipped folder containing `relay.py`. For example, if the folder is in Downloads:
 
-```caddyfile
-koi.example.com {
-    reverse_proxy 127.0.0.1:8765
-}
+```bash
+cd ~/Downloads/KoiAquarium
 ```
 
-1. On your own machine, run `python3 relay.py keys`. Keep the two tokens separate and share the message key privately with your friend.
-2. On the relay host, set the printed `KOI_TOKEN_A` and `KOI_TOKEN_B` as environment variables and run `python3 relay.py`. Keep it running with a persistent working directory or set `KOI_DATABASE` to a path on a persistent volume.
-3. On each Mac, right-click the tank and choose **Pair with a Friend…**. Enter the same HTTPS relay URL and message key on both Macs. Enter token A on one and B on the other.
-4. Send a test note in each direction. If a note never appears, verify both copies use the same message key and different mailbox tokens.
+Then paste this whole block. It creates a `host` mailbox and a `friend` mailbox the first time, and reuses them when you restart. Both tokens and the message database live outside the project folder.
 
-The app encrypts the message text and fish type with the shared key before sending. The relay can see mailbox activity and stores encrypted notes until dismissal. The Mac app saves its pairing details in local app preferences. Anyone with both mailbox tokens and the shared key can access the pair, so keep those details private.
+```bash
+(
+  umask 077
+  mkdir -p "$HOME/.koi-aquarium"
+  koi_config="$HOME/.koi-aquarium/mailboxes.json"
+  if [ ! -f "$koi_config" ]; then
+    python3 -c 'import json, secrets; print(json.dumps({name: secrets.token_urlsafe(32) for name in ("host", "friend")}))' > "$koi_config" || exit 1
+  fi
+  KOI_FRIEND_MAILBOXES="$(cat "$koi_config")" \
+  KOI_DATABASE="$HOME/.koi-aquarium/mail.sqlite3" \
+  python3 relay.py
+)
+```
 
-## Keepsakes and tank life
+If Terminal stays open without returning to the prompt, leave that window running. If you already set up a mailbox named `claire`, keep using `claire` wherever the examples below say `host`.
 
-- Right-click → **Send a hello ♥** sends a heart bubble through the existing connection.
-- Click the chest on the tank floor to browse gifts and place them in your tank. **Send a gift…** sends one encrypted treasure per person every rolling seven days.
-- Linked time starts when both Macs first check in to the updated relay. At 7, 30, 90, and 365 days, **Creatures & milestones** unlocks a pearl, moon coral, lantern, and crystal, respectively. The relay keeps this date across app restarts. If you already paired with an older relay, replace its `relay.py` and restart it using the same database and mailbox tokens. Earlier versions did not record link dates.
-- **Automatic moonlight** follows local time.
-- Use **Tank floor** to pick ivory, rose, basalt, gravel, or bare glass.
-- **Creatures & milestones** adds snails, starfish, and tiny shrimp. Move them along the floor in edit mode. Click shrimp in normal mode to make them bounce.
+### 2. Get an HTTPS address
 
-## Add more friends
+Install and sign in to [Tailscale for Mac](https://tailscale.com/docs/install/mac). In a **second Terminal window**, run:
 
-A fresh tank starts empty. Double-click, choose **Add Fish**, enter a friend's code and name, then pick their species. Each person adds the other's code. Right-click **My Friend Code…** to configure your own mailbox and copy the code to share. **Send Message** offers a checklist and **Send to all**.
+```bash
+tailscale funnel 8765
+```
 
-The relay host sets `KOI_FRIEND_MAILBOXES` to a JSON object mapping each person's mailbox ID to a distinct random private token of at least 32 characters. Generate each token with `python3 -c 'import secrets; print(secrets.token_urlsafe(32))'`. Give each person the relay's HTTPS address, their mailbox ID, and only their own token. Friend codes include a mailbox ID and public encryption key. Each Mac keeps its private encryption key in local preferences. Use the same relay for everyone in your tank. Existing two-person chest gifts and milestones still use the original **Pair with a Friend…** setup.
+Follow the approval prompt if one appears. Copy the full `https://…ts.net` address that Tailscale prints and leave this window running too. Funnel makes the relay reachable over the internet, and Koi requires a private mailbox token to use it. See the [Tailscale Funnel docs](https://tailscale.com/docs/features/tailscale-funnel) if the command doesn’t start.
 
-In edit mode, drag the chest along the floor. Right-click a decoration, creature, or friend fish to remove it individually.
+### 3. Get your friend code
+
+1. In Koi, right-click → **My Friend Code…**.
+2. Paste the HTTPS relay address and enter `host` as your mailbox ID. In a new Terminal tab, run this to copy your token straight to your clipboard:
+
+   ```bash
+   python3 -c 'import json, pathlib; print(json.loads((pathlib.Path.home() / ".koi-aquarium/mailboxes.json").read_text())["host"], end="")' | pbcopy
+   ```
+
+3. Paste it into **Private token**, then click **Save → Copy Code**. The copied code starts with `koi1.`.
+4. Give your friend the **same HTTPS address**, mailbox ID `friend`, and their own token privately. To copy their token, change `["host"]` to `["friend"]` in the command above. Your friend follows the same setup in their copy of Koi.
+5. Exchange your `koi1.` codes. Each of you chooses **Add Fish**, pastes the other person’s code, enters their name, then clicks **Next** to pick their fish type.
+
+**Share the `koi1.` code when adding someone. Keep mailbox tokens private and out of GitHub and screenshots.** To add more people, add a unique mailbox ID and random token for each person in `~/.koi-aquarium/mailboxes.json`, then restart the relay. You can generate each token with `python3 -c 'import secrets; print(secrets.token_urlsafe(32))'`.
+
+### 4. Send a test message
+
+Double-click above the waterline → **Send Message**. Pick one friend, check several, or choose **Send to all**. Notes can be up to 72 characters. Incoming notes appear above the sender’s fish, and clicking the bubble dismisses it. You can also right-click → **Send a hello ♥** to send a heart.
+
+Messages are encrypted by the app. The relay queues them while the recipient’s app is closed. If a test note doesn’t arrive, check that both Terminal windows are still running, both Macs use the same HTTPS address, and each person added the other’s code.
+
+## Treasure chest and milestones
+
+Click the chest on the tank floor to open the gift inventory beside the aquarium. You can place received gifts in your tank and send one treasure every seven days. Linking for 7, 30, 90, and 365 days unlocks a pearl, moon coral, lantern, and crystal under **Milestones**.
+
+Gifts and milestones use the separate **Pair with a Friend…** setup for two people. On the relay host, run `python3 relay.py keys` to generate two tokens and a shared message key. Set `KOI_TOKEN_A` and `KOI_TOKEN_B` in the relay’s environment and restart it with your existing mailbox configuration and database. In **Pair with a Friend…**, both people enter the same HTTPS address and shared message key. Use token A on one Mac and token B on the other. The milestone clock starts once both copies check in.
