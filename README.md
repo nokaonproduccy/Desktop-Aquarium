@@ -57,8 +57,8 @@ The app encrypts the message text and fish type with the shared key before sendi
 - Right-click → **Send a hello ♥** sends a heart bubble through the existing connection.
 - Click the chest on the tank floor to browse gifts and place them in your tank. **Send a gift…** sends one encrypted treasure per person every rolling seven days.
 - Linked time starts when both Macs first check in to the updated relay. At 7, 30, 90, and 365 days, **Creatures & milestones** unlocks a pearl, moon coral, lantern, and crystal, respectively. The relay keeps this date across app restarts. If you already paired with an older relay, replace its `relay.py` and restart it using the same database and mailbox tokens. Earlier versions did not record link dates.
-- **My chosen fish ♥** prompts for a name. Hold your pointer still over the chosen fish for 1.5 seconds to reveal it. Move the pointer to hide it.
-- **Automatic moonlight** follows local time. Use **Tank floor** to pick ivory, rose, basalt, gravel, or bare glass.
+- **Automatic moonlight** follows local time.
+- Use **Tank floor** to pick ivory, rose, basalt, gravel, or bare glass.
 - **Creatures & milestones** adds snails, starfish, and tiny shrimp. Move them along the floor in edit mode. Click shrimp in normal mode to make them bounce.
 
 ## Add more friends
