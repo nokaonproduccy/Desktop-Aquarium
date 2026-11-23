@@ -27,7 +27,6 @@ The build script checks the selected toolchain and Xcode installations in Applic
 
 ## Send notes between two Macs
 
-- Right-click the aquarium and choose **My chosen fish ♥**, then pick an individual fish. It becomes slightly larger and brighter.
 - Double-click above the waterline and choose **Send Message**. Notes can be up to 72 characters.
 - On your friend's Mac, your fish appears below the glass speech bubble and bobs until they click the bubble. Queued notes appear one at a time. Both apps must be running to send and receive live. Notes wait on the relay while the recipient is offline.
 
